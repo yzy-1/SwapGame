@@ -1,0 +1,14 @@
+name: ${name}
+
+version: ${project.version}
+main: ${groupId}.${artifactId}.Main
+api-version: 1.16
+depend:
+  - NoteBlockAPI
+permissions:
+  leafor.swap.reload:
+    description: Reload config
+    default: op
+  leafor.swap.watch:
+    description: Watch the game
+    default: true

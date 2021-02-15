@@ -2,7 +2,6 @@ package leafor.swap;
 
 import leafor.swap.config.Config;
 import leafor.swap.listenters.GameListener;
-import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class Main extends JavaPlugin {
@@ -15,7 +14,6 @@ public final class Main extends JavaPlugin {
   @Override
   public void onEnable() {
     instance = this;
-    var pm = Bukkit.getPluginManager();
     Config.GenerateDefault();
     Config.Load();
     GameListener.Init();

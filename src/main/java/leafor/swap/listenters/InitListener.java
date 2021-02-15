@@ -102,6 +102,14 @@ public final class InitListener extends GameListener {
       throw new RuntimeException("Could not create world");
     }
     w.setPVP(false);
+    /*
+      WARING:
+      在 1.16.4/5 版本中, 新生成的世界将不会刷怪
+      也就是 setDifficulty 无效
+      这是一个来自 vanilla 的 bug, 所以本插件不会去修复它
+      https://hub.spigotmc.org/jira/browse/SPIGOT-6330
+      可以通过安装 Multiverse-Core 来修复这个 bug
+     */
     w.setDifficulty(Difficulty.HARD);
     w.setAutoSave(false);
     w.setHardcore(false);
@@ -114,7 +122,7 @@ public final class InitListener extends GameListener {
     w.setFullTime(Config.game_area_time);
     WorldBorder wb = w.getWorldBorder();
     wb.setCenter(w.getSpawnLocation());
-    wb.setSize(Config.game_area_radius * 2);
+    wb.setSize(Config.game_area_radius * 2 + 1); // 边界边长 = 半径 * 2 + 1
     wb.setDamageAmount(Double.MAX_VALUE); // 使玩家离开边界时死亡
     return w;
   }

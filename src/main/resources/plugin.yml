@@ -5,6 +5,8 @@ main: ${groupId}.${artifactId}.Main
 api-version: 1.16
 depend:
   - NoteBlockAPI
+softdepend:
+  - Multiverse-Core
 permissions:
   leafor.swap.reload:
     description: Reload config

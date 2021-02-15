@@ -28,7 +28,7 @@ public final class AutoSmelt {
           yield new ItemStack(Material.NETHERITE_SCRAP);
         default:
           yield x;
-      }).forEach(x -> b.getWorld().dropItemNaturally(
+      }).forEach(x -> b.getWorld().dropItem(
       loc.add(0.2, 0.2, 0.2), x));
     b.setType(Material.AIR);
     return true;

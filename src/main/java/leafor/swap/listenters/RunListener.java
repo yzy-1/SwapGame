@@ -4,6 +4,7 @@ import com.xxmicloxx.NoteBlockAPI.songplayer.RadioSongPlayer;
 import leafor.swap.Main;
 import leafor.swap.config.Config;
 import leafor.swap.utils.AutoSmelt;
+import leafor.swap.utils.RandomSpawn;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.boss.BarColor;
@@ -51,7 +52,7 @@ public final class RunListener extends GameListener {
     final var MAX_HEALTH = Config.game_player_health;
     // 初始化每个玩家
     players.forEach(p -> {
-      p.teleport(gameWorld.getSpawnLocation());
+      p.teleport(RandomSpawn.Get(gameWorld));
       p.setGameMode(GameMode.SURVIVAL);
       p.setFireTicks(0);
       p.setFoodLevel(20);

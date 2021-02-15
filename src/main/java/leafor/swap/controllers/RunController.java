@@ -173,18 +173,6 @@ public final class RunController extends Controller {
         gameWorld.dropItemNaturally(loc, x);
       }
     });
-    players.forEach(x -> x.playSound(
-      x.getLocation(),
-      Sound.ENTITY_GENERIC_EXPLODE,
-      SoundCategory.MASTER,
-      1F,
-      1F));
-    spectators.forEach(x -> x.playSound(
-      x.getLocation(),
-      Sound.ENTITY_GENERIC_EXPLODE,
-      SoundCategory.MASTER,
-      1F,
-      1F));
     p.getInventory().clear();
     RemovePlayer(p);
     AddSpectator(p); // 加入观战列表

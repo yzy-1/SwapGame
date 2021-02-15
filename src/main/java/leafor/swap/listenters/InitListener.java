@@ -1,9 +1,12 @@
-package leafor.swap.controllers;
+package leafor.swap.listenters;
 
 import leafor.swap.Main;
 import leafor.swap.config.Config;
 import leafor.swap.utils.WorldHelper;
 import org.bukkit.*;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.PotionMeta;
@@ -12,24 +15,34 @@ import org.bukkit.potion.PotionEffectType;
 
 import java.util.Random;
 
-public final class InitController extends Controller {
-  public InitController() {
+public final class InitListener extends GameListener {
+  public InitListener() {
+    Bukkit.getPluginManager().registerEvents(this, Main.GetInstance());
     var w = GenerateGameWorld();
     Bukkit.resetRecipes();
     AddCustomRecipes();
     System.out.println("[SwapGame] Initialized");
+    HandlerList.unregisterAll(this);
     Bukkit.getScheduler().runTask(Main.GetInstance(), () ->
-      Controller.SetController(new WaitController(w)));
+      GameListener.SetListener(new WaitListener(w)));
   }
 
+  // 添加一些自定义配方
   private void AddCustomRecipes() {
     var m = Main.GetInstance();
-    // 腐肉 -> 苹果
+    // 腐肉 -> 瓶子
     Bukkit.addRecipe(new ShapedRecipe(
-      new NamespacedKey(m, "sg_apple"), new ItemStack(Material.APPLE))
+      new NamespacedKey(m, "sg_bottle"),
+      new ItemStack(Material.GLASS_BOTTLE))
                        .shape("R")
                        .setIngredient('R', Material.ROTTEN_FLESH));
-    // 金锭 + 苹果 -> 瞬间治疗药水
+    // 沙子 -> 瓶子
+    Bukkit.addRecipe(new ShapedRecipe(
+      new NamespacedKey(m, "sg_bottle2"),
+      new ItemStack(Material.GLASS_BOTTLE))
+                       .shape("S")
+                       .setIngredient('S', Material.SAND));
+    // 金锭 + 瓶子 -> 瞬间治疗药水
     var potion = new ItemStack(Material.SPLASH_POTION);
     var pMeta = (PotionMeta) potion.getItemMeta();
     pMeta.setColor(Color.RED);
@@ -38,9 +51,9 @@ public final class InitController extends Controller {
     potion.setItemMeta(pMeta);
     Bukkit.addRecipe(new ShapedRecipe(
       new NamespacedKey(m, "sg_heal"), potion)
-                       .shape("G", "A")
+                       .shape("G", "B")
                        .setIngredient('G', Material.GOLD_INGOT)
-                       .setIngredient('A', Material.APPLE));
+                       .setIngredient('B', Material.GLASS_BOTTLE));
     pMeta.setColor(Color.fromRGB(0xE49A3A));
     pMeta.addCustomEffect(new PotionEffect(
       PotionEffectType.HEAL, 1, 2), true);
@@ -49,12 +62,12 @@ public final class InitController extends Controller {
         PotionEffectType.FIRE_RESISTANCE, 400, 0),
       true);
     potion.setItemMeta(pMeta);
-    // 钻石 + 苹果 -> 防火药水
+    // 钻石 + 瓶子 -> 防火药水
     Bukkit.addRecipe(new ShapedRecipe(
       new NamespacedKey(m, "sg_fire"), potion)
-                       .shape("D", "A")
+                       .shape("D", "B")
                        .setIngredient('D', Material.DIAMOND)
-                       .setIngredient('A', Material.APPLE));
+                       .setIngredient('B', Material.GLASS_BOTTLE));
     // 铁锭 * 3 -> 水桶
     Bukkit.addRecipe(new ShapedRecipe(
       new NamespacedKey(m, "sg_water"),
@@ -70,6 +83,7 @@ public final class InitController extends Controller {
                        .setIngredient('W', Material.WATER_BUCKET));
   }
 
+  // 生成游戏世界
   private World GenerateGameWorld() {
     final var WORLD_NAME = Config.game_world;
     var w = Bukkit.getWorld(WORLD_NAME);
@@ -92,12 +106,23 @@ public final class InitController extends Controller {
     w.setAutoSave(false);
     w.setHardcore(false);
     w.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true); // 立即重生
-    w.setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, false); // 显示成就
+    w.setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, false); // 不显示成就
     w.setGameRule(GameRule.NATURAL_REGENERATION, false); // 自然回复
+    w.setGameRule(GameRule.DO_MOB_SPAWNING, true); // 怪物生成
+    w.setGameRule(GameRule.DO_WEATHER_CYCLE, false); // 取消天气变化
+    w.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false); // 暂时锁住时间
+    w.setFullTime(Config.game_area_time);
     WorldBorder wb = w.getWorldBorder();
     wb.setCenter(w.getSpawnLocation());
     wb.setSize(Config.game_area_radius * 2);
     wb.setDamageAmount(Double.MAX_VALUE); // 使玩家离开边界时死亡
     return w;
+  }
+
+  @EventHandler
+  public void OnPlayerJoin(PlayerJoinEvent e) {
+    var p = e.getPlayer();
+    e.setJoinMessage("");
+    p.kickPlayer("Server is initializing");
   }
 }

@@ -17,6 +17,7 @@ public final class Config {
   public static int game_player_max;
   public static int game_player_health;
   public static int game_area_radius;
+  public static long game_area_time;
   public static int game_protectTime;
   public static int game_swap_time_min;
   public static int game_swap_time_max;
@@ -42,6 +43,7 @@ public final class Config {
     game_player_max = cfg.getInt("game.player.max");
     game_player_health = cfg.getInt("game.player.health");
     game_area_radius = cfg.getInt("game.area.radius");
+    game_area_time = cfg.getLong("game.area.time");
     game_protectTime = cfg.getInt("game.protectTime");
     game_swap_time_min = cfg.getInt("game.swap.time.min");
     if (game_swap_time_min <= 10) {
@@ -70,6 +72,7 @@ public final class Config {
     cfg.addDefault("game.player.max", 16);
     cfg.addDefault("game.player.health", 40);
     cfg.addDefault("game.area.radius", 200);
+    cfg.addDefault("game.area.time", 11000L);
     cfg.addDefault("game.protectTime", 60);
     cfg.addDefault("game.swap.time.min", 30);
     cfg.addDefault("game.swap.time.max", 180);

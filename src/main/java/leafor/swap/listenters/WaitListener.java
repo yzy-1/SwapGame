@@ -1,4 +1,4 @@
-package leafor.swap.controllers;
+package leafor.swap.listenters;
 
 import leafor.swap.Main;
 import leafor.swap.config.Config;
@@ -8,6 +8,11 @@ import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import javax.annotation.Nonnull;
@@ -15,19 +20,21 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-public final class WaitController extends Controller {
+public final class WaitListener extends GameListener {
   private final Set<Player> players = new HashSet<>(); // 游戏玩家
   private final Set<Player> spectators = new HashSet<>(); // 观战玩家
   private final World gameWorld; // 游戏世界
   private final BossBar countdownBar;
-  private GameStartCountdown gameStartCountdown;
+  private GameStartCountdown countdown;
 
-  public WaitController(@Nonnull World gameWorld) {
+  public WaitListener(@Nonnull World gameWorld) {
+    Bukkit.getPluginManager().registerEvents(this, Main.GetInstance());
     this.gameWorld = gameWorld;
     countdownBar = Bukkit.createBossBar("", BarColor.RED, BarStyle.SOLID);
     ResetCountdownBar();
   }
 
+  // 重置倒计时进度条
   private void ResetCountdownBar() {
     countdownBar.setTitle("Waiting for players");
     countdownBar.setProgress(1.0);
@@ -38,7 +45,7 @@ public final class WaitController extends Controller {
     InitSpectator(p);
   }
 
-  // 初始化等待大厅中的玩家
+  // 初始化游戏玩家
   public void InitPlayer(@Nonnull Player p) {
     p.setGameMode(GameMode.ADVENTURE); // 冒险模式下玩家无法破坏东西
     p.teleport(Config.lobby_world.getSpawnLocation());
@@ -57,6 +64,7 @@ public final class WaitController extends Controller {
     countdownBar.addPlayer(p);
   }
 
+  // 初始化观战玩家
   private void InitSpectator(@Nonnull Player p) {
     p.setGameMode(GameMode.SPECTATOR);
     p.getActivePotionEffects().forEach(
@@ -66,23 +74,21 @@ public final class WaitController extends Controller {
     countdownBar.addPlayer(p);
   }
 
+  // 开始游戏
   public void StartGame() {
     countdownBar.removeAll();
     System.out.println("[SwapGame] Game will start soon");
+    HandlerList.unregisterAll(this);
     Bukkit.getScheduler().runTask(Main.GetInstance(), () ->
-      Controller.SetController(new RunController(
+      GameListener.SetListener(new RunListener(
         players, spectators, gameWorld)));
   }
 
+  // 添加玩家
   public void AddPlayer(@Nonnull Player p) {
     final var MAX_PLAYER = Config.game_player_max;
     final var MIN_PLAYER = Config.game_player_min;
     var name = p.getDisplayName();
-    if (players.size() >= MAX_PLAYER) {
-      p.sendMessage(ChatColor.RED + "Room is full, you are a spectator");
-      AddSpectator(p);
-      return;
-    }
     players.add(p);
     InitPlayer(p);
     var size = players.size();
@@ -93,17 +99,20 @@ public final class WaitController extends Controller {
       "%s%s joined the game %s[%d/%d]".formatted(
         name, ChatColor.AQUA, ChatColor.YELLOW, size, MAX_PLAYER)));
     if (size >= MIN_PLAYER &&
-      (gameStartCountdown == null || gameStartCountdown.isCancelled())) {
-      gameStartCountdown = new GameStartCountdown(Config.game_startCountdown);
-      gameStartCountdown.runTaskTimer(Main.GetInstance(), 1, 20);
+      (countdown == null || countdown.isCancelled())) {
+      countdown = new GameStartCountdown();
+      countdown.runTaskTimer(Main.GetInstance(), 1, 20);
     }
     if (size == MAX_PLAYER) {
-      assert gameStartCountdown != null;
-      gameStartCountdown.seconds = Math.min(gameStartCountdown.seconds, 5);
+      assert countdown != null;
+      countdown.seconds = Math.min(countdown.seconds, 5);
     }
   }
 
-  public void QuitPlayer(@Nonnull Player p) {
+  @EventHandler
+  public void OnPlayerQuit(PlayerQuitEvent e) {
+    e.setQuitMessage("");
+    var p = e.getPlayer();
     final var MAX_PLAYER = Config.game_player_max;
     var name = p.getDisplayName();
     if (players.contains(p)) {
@@ -115,9 +124,10 @@ public final class WaitController extends Controller {
       spectators.forEach(x -> x.sendMessage(
         "%s%s exited the game %s[%d/%d]".formatted(
           name, ChatColor.AQUA, ChatColor.YELLOW, size, MAX_PLAYER)));
-      if (gameStartCountdown != null &&
+      if (countdown != null &&
         players.size() < Config.game_player_min) {
-        gameStartCountdown.cancel();
+        countdown.cancel();
+        countdown = null;
         ResetCountdownBar();
       }
     } else if (spectators.contains(p)) {
@@ -127,17 +137,32 @@ public final class WaitController extends Controller {
     }
   }
 
-  // 向所有人发送信息
-  public void SendMessage(@Nonnull String message) {
-    Config.lobby_world.getPlayers().forEach(p -> p.sendMessage(message));
+  @EventHandler
+  public void OnPlayerJoin(PlayerJoinEvent e) {
+    e.setJoinMessage("");
+    var p = e.getPlayer();
+    if (players.size() < Config.game_player_max) {
+      AddPlayer(p);
+    } else {
+      p.sendMessage(ChatColor.RED + "Room is full, you are a spectator");
+      AddSpectator(p);
+    }
+  }
+
+  @EventHandler
+  public void OnEntityDamage(EntityDamageEvent e) {
+    var p = e.getEntity();
+    if (p instanceof Player && players.contains(p)) {
+      e.setCancelled(true);
+    }
   }
 
   // 游戏开始倒计时
-  final class GameStartCountdown extends BukkitRunnable {
+  public final class GameStartCountdown extends BukkitRunnable {
     private int seconds;
 
-    GameStartCountdown(int seconds) {
-      this.seconds = seconds;
+    GameStartCountdown() {
+      seconds = Config.game_startCountdown;
     }
 
     @Override

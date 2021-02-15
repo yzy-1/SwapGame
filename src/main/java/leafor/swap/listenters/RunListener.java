@@ -4,6 +4,7 @@ import com.xxmicloxx.NoteBlockAPI.songplayer.RadioSongPlayer;
 import leafor.swap.Main;
 import leafor.swap.config.Config;
 import leafor.swap.utils.AutoSmelt;
+import leafor.swap.utils.BungeeHelper;
 import leafor.swap.utils.RandomSpawn;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
@@ -129,10 +130,16 @@ public final class RunListener extends GameListener {
       countdownBar = null;
       System.out.println("[SwapGame] Game over");
       HandlerList.unregisterAll(this);
-      Bukkit.getScheduler().runTaskLater(
-        Main.GetInstance(),
-        () -> GameListener.SetListener(
-          new CleanListener(gameWorld)), 10 * 20);
+      var m = Main.GetInstance();
+      if (Config.bungee_enabled) {
+        // 防止玩家没全部踢出
+        Bukkit.getScheduler().runTaskLater(m, () -> {
+          players.forEach(BungeeHelper::BringToLobby);
+          spectators.forEach(BungeeHelper::BringToLobby);
+        }, 5 * 20);
+      }
+      Bukkit.getScheduler().runTaskLater(m, () -> GameListener.SetListener(
+        new CleanListener(gameWorld)), 10 * 20);
     }
   }
 
@@ -228,8 +235,10 @@ public final class RunListener extends GameListener {
     if (p.hasPermission("leafor.swap.watch")) {
       AddSpectator(p);
       p.teleport(gameWorld.getSpawnLocation());
+    } else if (Config.bungee_enabled) {
+      BungeeHelper.BringToLobby(p);
     } else {
-      p.kickPlayer("Game is already running!");
+      p.kickPlayer("Game is already running");
     }
   }
 

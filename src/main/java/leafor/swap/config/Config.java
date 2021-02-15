@@ -10,6 +10,8 @@ import org.bukkit.World;
 import java.util.Objects;
 
 public final class Config {
+  public static boolean bungee_enabled;
+  public static String bungee_lobbyServer;
   public static World lobby_world;
   public static String game_world;
   public static int game_startCountdown;
@@ -28,6 +30,9 @@ public final class Config {
   // 加载配置文件
   public static void Load() {
     var cfg = Main.GetInstance().getConfig();
+    bungee_enabled = cfg.getBoolean("bungee.enabled");
+    bungee_lobbyServer =
+      Objects.requireNonNull(cfg.getString("bungee.lobbyServer"));
     var lobbyWorldName =
       Objects.requireNonNull(cfg.getString("lobby.world"));
     lobby_world = Bukkit.getWorld(lobbyWorldName);
@@ -65,6 +70,8 @@ public final class Config {
   public static void GenerateDefault() {
     var cfg = Main.GetInstance().getConfig();
     cfg.options().copyDefaults(true);
+    cfg.addDefault("bungee.enabled", false);
+    cfg.addDefault("bungee.lobbyServer", "swap-hub");
     cfg.addDefault("lobby.world", "lobby");
     cfg.addDefault("game.world", "game");
     cfg.addDefault("game.startCountdown", 30);

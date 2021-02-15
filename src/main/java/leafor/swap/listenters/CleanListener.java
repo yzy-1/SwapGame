@@ -1,6 +1,8 @@
 package leafor.swap.listenters;
 
 import leafor.swap.Main;
+import leafor.swap.config.Config;
+import leafor.swap.utils.BungeeHelper;
 import leafor.swap.utils.WorldHelper;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -28,6 +30,10 @@ public final class CleanListener extends GameListener {
   public void OnPlayerJoin(PlayerJoinEvent e) {
     var p = e.getPlayer();
     e.setJoinMessage("");
-    p.kickPlayer("Server is cleaning!");
+    if (Config.bungee_enabled) {
+      BungeeHelper.BringToLobby(p);
+    } else {
+      p.kickPlayer("Server is cleaning");
+    }
   }
 }

@@ -4,7 +4,7 @@ import com.xxmicloxx.NoteBlockAPI.model.Song;
 import com.xxmicloxx.NoteBlockAPI.utils.NBSDecoder;
 import leafor.swap.Main;
 import org.bukkit.Bukkit;
-import org.bukkit.Difficulty;
+import org.bukkit.GameRule;
 import org.bukkit.World;
 
 import java.util.Objects;
@@ -41,7 +41,8 @@ public final class Config {
         "Invalid lobby world %s".formatted(lobbyWorldName));
     }
     lobby_world.setPVP(false);
-    lobby_world.setDifficulty(Difficulty.PEACEFUL);
+    // 大厅不刷怪
+    lobby_world.setGameRule(GameRule.DO_MOB_SPAWNING, false);
     game_world = Objects.requireNonNull(cfg.getString("game.world"));
     game_startCountdown = cfg.getInt("game.startCountdown");
     game_player_min = cfg.getInt("game.player.min");

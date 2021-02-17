@@ -107,13 +107,13 @@ public final class InitListener extends GameListener {
       WARING:
       在 1.16.4/5 版本中, 新生成的世界将不会刷怪
       也就是 setDifficulty 无效
-      这是一个来自 vanilla 的 bug, 所以本插件不会去修复它
+      这是一个来自 spigot 的 bug, 所以本插件不会去修复它
       https://hub.spigotmc.org/jira/browse/SPIGOT-6330
-      可以通过安装 Multiverse-Core 来修复这个 bug
+      可以通过安装 Multiverse-Core
+      或将 server.properties 和大厅和的难度都设为一种非和平的难度
+      来修复这个 bug
      */
-    w.setDifficulty(Difficulty.HARD);
     w.setAutoSave(false);
-    w.setHardcore(false);
     w.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true); // 立即重生
     w.setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, false); // 不显示成就
     w.setGameRule(GameRule.NATURAL_REGENERATION, false); // 自然回复

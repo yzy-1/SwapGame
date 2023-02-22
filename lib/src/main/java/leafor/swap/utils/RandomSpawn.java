@@ -3,16 +3,15 @@ package leafor.swap.utils;
 import leafor.swap.config.Config;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.World;
 import org.bukkit.block.Block;
-
+import com.onarandombox.MultiverseCore.api.MultiverseWorld;
 import javax.annotation.Nonnull;
 import java.util.Random;
 
 public final class RandomSpawn {
   private RandomSpawn() {}
 
-  public static Location Get(@Nonnull World w) {
+  public static Location Get(@Nonnull MultiverseWorld w) {
     var rand = new Random();
     var radius = Config.game_area_radius;
     var originSpawn = w.getSpawnLocation();
@@ -23,12 +22,12 @@ public final class RandomSpawn {
       // 生成范围在 [-radius, radius) 之间的整数
       var x = rand.nextInt(radius * 2) - radius + originX;
       var z = rand.nextInt(radius * 2) - radius + originZ;
-      var loc = new Location(w, x, 0, z);
+      var loc = new Location(w.getCBWorld(), x, 0, z);
       var chunk = loc.getChunk();
       if (!chunk.isLoaded()) {
         chunk.load(true);
       }
-      b = w.getHighestBlockAt(loc);
+      b = w.getCBWorld().getHighestBlockAt(loc);
     } while (b.getType() == Material.LAVA); // 玩家的重生点下面不能是岩浆
     return b.getLocation();
   }

@@ -1,7 +1,8 @@
-package leafor.swap.listenters;
+package leafor.swap.listeners;
 
 import leafor.swap.Main;
 import leafor.swap.config.Config;
+import net.kyori.adventure.text.Component;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.boss.BarColor;
@@ -14,20 +15,20 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitRunnable;
-
+import com.onarandombox.MultiverseCore.api.MultiverseWorld;
 import javax.annotation.Nonnull;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
 public final class WaitListener extends GameListener {
-  private final Set<Player> players = new HashSet<>(); // 游戏玩家
-  private final Set<Player> spectators = new HashSet<>(); // 观战玩家
-  private final World gameWorld; // 游戏世界
+  private final @Nonnull Set<Player> players = new HashSet<>(); // 游戏玩家
+  private final @Nonnull Set<Player> spectators = new HashSet<>(); // 观战玩家
+  private final @Nonnull MultiverseWorld gameWorld; // 游戏世界
   private final BossBar countdownBar;
   private GameStartCountdown countdown;
 
-  public WaitListener(@Nonnull World gameWorld) {
+  public WaitListener(@Nonnull MultiverseWorld gameWorld) {
     Bukkit.getPluginManager().registerEvents(this, Main.GetInstance());
     this.gameWorld = gameWorld;
     countdownBar = Bukkit.createBossBar("", BarColor.RED, BarStyle.SOLID);
@@ -54,8 +55,7 @@ public final class WaitListener extends GameListener {
     p.setHealthScaled(false);
     p.setFoodLevel(20);
     p.setSaturation(20);
-    Objects.requireNonNull(p.getAttribute(Attribute.GENERIC_MAX_HEALTH))
-      .setBaseValue(20);
+    Objects.requireNonNull(p.getAttribute(Attribute.GENERIC_MAX_HEALTH)).setBaseValue(20);
     p.setHealth(20);
     p.setExp(0);
     p.setLevel(0);
@@ -67,8 +67,7 @@ public final class WaitListener extends GameListener {
   // 初始化观战玩家
   private void InitSpectator(@Nonnull Player p) {
     p.setGameMode(GameMode.SPECTATOR);
-    p.getActivePotionEffects().forEach(
-      e -> p.removePotionEffect(e.getType()));
+    p.getActivePotionEffects().forEach(e -> p.removePotionEffect(e.getType()));
     p.getInventory().clear();
     p.teleport(Config.lobby_world.getSpawnLocation());
     countdownBar.addPlayer(p);
@@ -79,27 +78,25 @@ public final class WaitListener extends GameListener {
     countdownBar.removeAll();
     System.out.println("[SwapGame] Game will start soon");
     HandlerList.unregisterAll(this);
-    Bukkit.getScheduler().runTask(Main.GetInstance(), () ->
-      GameListener.SetListener(new RunListener(
-        players, spectators, gameWorld)));
+    Bukkit.getScheduler().runTask(Main.GetInstance(),
+        () -> GameListener.SetListener(new RunListener(players, spectators, gameWorld)));
   }
 
   // 添加玩家
   public void AddPlayer(@Nonnull Player p) {
     final var MAX_PLAYER = Config.game_player_max;
     final var MIN_PLAYER = Config.game_player_min;
-    var name = p.getDisplayName();
+    var name = p.displayName();
     players.add(p);
     InitPlayer(p);
     var size = players.size();
-    players.forEach(x -> x.sendMessage(
-      "%s%s joined the game %s[%d/%d]".formatted(
-        name, ChatColor.AQUA, ChatColor.YELLOW, size, MAX_PLAYER)));
-    spectators.forEach(x -> x.sendMessage(
-      "%s%s joined the game %s[%d/%d]".formatted(
-        name, ChatColor.AQUA, ChatColor.YELLOW, size, MAX_PLAYER)));
-    if (size >= MIN_PLAYER &&
-      (countdown == null || countdown.isCancelled())) {
+    players
+        .forEach(x -> x.sendMessage(name.append(Component.text(ChatColor.AQUA + " joined the game")
+            .append(Component.text(" %s[%d/%d]".formatted(ChatColor.YELLOW, size, MAX_PLAYER))))));
+    spectators
+        .forEach(x -> x.sendMessage(name.append(Component.text(ChatColor.AQUA + " joined the game")
+            .append(Component.text(" %s[%d/%d]".formatted(ChatColor.YELLOW, size, MAX_PLAYER))))));
+    if (size >= MIN_PLAYER && (countdown == null || countdown.isCancelled())) {
       countdown = new GameStartCountdown();
       countdown.runTaskTimer(Main.GetInstance(), 1, 20);
     }
@@ -111,21 +108,20 @@ public final class WaitListener extends GameListener {
 
   @EventHandler
   public void OnPlayerQuit(PlayerQuitEvent e) {
-    e.setQuitMessage("");
+    e.quitMessage(null);
     var p = e.getPlayer();
     final var MAX_PLAYER = Config.game_player_max;
-    var name = p.getDisplayName();
+    var name = p.displayName();
     if (players.contains(p)) {
       players.remove(p);
       var size = players.size();
-      players.forEach(x -> x.sendMessage(
-        "%s%s exited the game %s[%d/%d]".formatted(
-          name, ChatColor.AQUA, ChatColor.YELLOW, size, MAX_PLAYER)));
-      spectators.forEach(x -> x.sendMessage(
-        "%s%s exited the game %s[%d/%d]".formatted(
-          name, ChatColor.AQUA, ChatColor.YELLOW, size, MAX_PLAYER)));
-      if (countdown != null &&
-        players.size() < Config.game_player_min) {
+      players.forEach(
+          x -> x.sendMessage(name.append(Component.text(ChatColor.AQUA + " left the game").append(
+              Component.text(" %s[%d/%d]".formatted(ChatColor.YELLOW, size, MAX_PLAYER))))));
+      spectators.forEach(
+          x -> x.sendMessage(name.append(Component.text(ChatColor.AQUA + " left the game").append(
+              Component.text(" %s[%d/%d]".formatted(ChatColor.YELLOW, size, MAX_PLAYER))))));
+      if (countdown != null && players.size() < Config.game_player_min) {
         countdown.cancel();
         countdown = null;
         ResetCountdownBar();
@@ -139,10 +135,10 @@ public final class WaitListener extends GameListener {
 
   @EventHandler
   public void OnPlayerJoin(PlayerJoinEvent e) {
-    e.setJoinMessage("");
+    e.joinMessage(null);
     var p = e.getPlayer();
     if (players.size() < Config.game_player_max) {
-      AddPlayer(p);
+      AddPlayer(Objects.requireNonNull(p));
     } else {
       p.sendMessage(ChatColor.RED + "Room is full, you are a spectator");
       AddSpectator(p);
@@ -171,18 +167,10 @@ public final class WaitListener extends GameListener {
       countdownBar.setTitle("Game will start in %ds".formatted(seconds));
       countdownBar.setProgress((double) seconds / Config.game_startCountdown);
       if (1 <= seconds && seconds <= 5) {
-        players.forEach(
-          x -> x.playSound(
-            x.getLocation(),
-            Sound.BLOCK_NOTE_BLOCK_HARP,
-            SoundCategory.MASTER,
-            1, 1));
-        spectators.forEach(
-          x -> x.playSound(
-            x.getLocation(),
-            Sound.BLOCK_NOTE_BLOCK_HARP,
-            SoundCategory.MASTER,
-            1, 1));
+        players.forEach(x -> x.playSound(x.getLocation(), Sound.BLOCK_NOTE_BLOCK_HARP,
+            SoundCategory.MASTER, 1, 1));
+        spectators.forEach(x -> x.playSound(x.getLocation(), Sound.BLOCK_NOTE_BLOCK_HARP,
+            SoundCategory.MASTER, 1, 1));
       }
       if (seconds <= 0) {
         cancel();

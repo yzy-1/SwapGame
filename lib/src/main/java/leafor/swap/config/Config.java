@@ -19,8 +19,10 @@ public final class Config {
   public static int game_player_max;
   public static int game_player_health;
   public static int game_area_radius;
+  public static int game_area_shrinkCountDown;
   public static long game_area_time;
   public static int game_protectTime;
+  public static boolean game_random_drop;
   public static int game_swap_time_min;
   public static int game_swap_time_max;
   public static Song game_swap_song;
@@ -31,14 +33,11 @@ public final class Config {
   public static void Load() {
     var cfg = Main.GetInstance().getConfig();
     bungee_enabled = cfg.getBoolean("bungee.enabled");
-    bungee_lobbyServer =
-      Objects.requireNonNull(cfg.getString("bungee.lobbyServer"));
-    var lobbyWorldName =
-      Objects.requireNonNull(cfg.getString("lobby.world"));
+    bungee_lobbyServer = Objects.requireNonNull(cfg.getString("bungee.lobbyServer"));
+    var lobbyWorldName = Objects.requireNonNull(cfg.getString("lobby.world"));
     lobby_world = Bukkit.getWorld(lobbyWorldName);
     if (lobby_world == null) {
-      throw new RuntimeException(
-        "Invalid lobby world %s".formatted(lobbyWorldName));
+      throw new RuntimeException("Invalid lobby world %s".formatted(lobbyWorldName));
     }
     lobby_world.setPVP(false);
     // 大厅不刷怪
@@ -49,22 +48,22 @@ public final class Config {
     game_player_max = cfg.getInt("game.player.max");
     game_player_health = cfg.getInt("game.player.health");
     game_area_radius = cfg.getInt("game.area.radius");
+    game_area_shrinkCountDown = cfg.getInt("game.area.shrinkCountDown");
     game_area_time = cfg.getLong("game.area.time");
     game_protectTime = cfg.getInt("game.protectTime");
+    game_random_drop = cfg.getBoolean("game.random.drop");
     game_swap_time_min = cfg.getInt("game.swap.time.min");
     if (game_swap_time_min <= 10) {
       throw new RuntimeException("game.swap.time.min must be greater than 10");
     }
     game_swap_time_max = cfg.getInt("game.swap.time.max");
     if (game_swap_time_max <= game_swap_time_min) {
-      throw new RuntimeException(
-        "game.swap.time.max must be greater than game.swap.time.min");
+      throw new RuntimeException("game.swap.time.max must be greater than game.swap.time.min");
     }
     var swapSongName = cfg.getString("game.swap.song");
     if (swapSongName != null && !swapSongName.isEmpty()) {
-      game_swap_song =
-        NBSDecoder.parse(Main.GetInstance().getDataFolder().toPath()
-                           .resolve(swapSongName).toFile());
+      game_swap_song = NBSDecoder
+          .parse(Main.GetInstance().getDataFolder().toPath().resolve(swapSongName).toFile());
     }
   }
 
@@ -80,8 +79,10 @@ public final class Config {
     cfg.addDefault("game.player.max", 16);
     cfg.addDefault("game.player.health", 40);
     cfg.addDefault("game.area.radius", 200);
+    cfg.addDefault("game.area.shrinkCountDown", 60 * 5);
     cfg.addDefault("game.area.time", 11000L);
     cfg.addDefault("game.protectTime", 60);
+    cfg.addDefault("game.random.drop", false);
     cfg.addDefault("game.swap.time.min", 30);
     cfg.addDefault("game.swap.time.max", 180);
     cfg.addDefault("game.swap.song", "");

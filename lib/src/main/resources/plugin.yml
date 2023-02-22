@@ -1,0 +1,15 @@
+name: "swap"
+
+version: "0.0.0"
+main: leafor.swap.Main
+api-version: 1.16
+depend:
+  - NoteBlockAPI
+  - "Multiverse-Core"
+permissions:
+  leafor.swap.reload:
+    description: Reload config
+    default: op
+  leafor.swap.watch:
+    description: Watch the game
+    default: true

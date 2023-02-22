@@ -1,12 +1,11 @@
-name: ${name}
+name: "swap"
 
-version: ${project.version}
-main: ${groupId}.${artifactId}.Main
+version: "0.0.0"
+main: leafor.swap.Main
 api-version: 1.16
 depend:
   - NoteBlockAPI
-softdepend:
-  - Multiverse-Core
+  - "Multiverse-Core"
 permissions:
   leafor.swap.reload:
     description: Reload config

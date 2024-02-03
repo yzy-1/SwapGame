@@ -1,6 +1,5 @@
 package leafor.swap.utils;
 
-import leafor.swap.config.Config;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -11,9 +10,8 @@ import java.util.Random;
 public final class RandomSpawn {
   private RandomSpawn() {}
 
-  public static Location Get(@Nonnull MultiverseWorld w) {
+  public static Location Get(@Nonnull MultiverseWorld w, int radius) {
     var rand = new Random();
-    var radius = Config.game_area_radius;
     var originSpawn = w.getSpawnLocation();
     var originX = originSpawn.getBlockX();
     var originZ = originSpawn.getBlockZ();

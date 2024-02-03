@@ -20,9 +20,14 @@ public final class Config {
   public static int game_player_health;
   public static int game_area_radius;
   public static int game_area_shrinkCountDown;
+  public static int game_area_shrinkInterval;
   public static long game_area_time;
+  public static double game_area_borderDamage;
+  public static int game_swapTopTime;
   public static int game_protectTime;
-  public static boolean game_random_drop;
+  public static boolean game_feature_randomDrop;
+  public static boolean game_feature_aoeBow;
+  public static boolean game_feature_comboFly;
   public static int game_swap_time_min;
   public static int game_swap_time_max;
   public static Song game_swap_song;
@@ -49,9 +54,14 @@ public final class Config {
     game_player_health = cfg.getInt("game.player.health");
     game_area_radius = cfg.getInt("game.area.radius");
     game_area_shrinkCountDown = cfg.getInt("game.area.shrinkCountDown");
+    game_area_shrinkInterval = cfg.getInt("game.area.shrinkInterval");
     game_area_time = cfg.getLong("game.area.time");
+    game_area_borderDamage = cfg.getDouble("game.area.borderDamage");
+    game_swapTopTime = cfg.getInt("game.swapTopTime");
     game_protectTime = cfg.getInt("game.protectTime");
-    game_random_drop = cfg.getBoolean("game.random.drop");
+    game_feature_randomDrop = cfg.getBoolean("game.feature.randomDrop");
+    game_feature_aoeBow = cfg.getBoolean("game.feature.aoeBow");
+    game_feature_comboFly = cfg.getBoolean("game.feature.comboFly");
     game_swap_time_min = cfg.getInt("game.swap.time.min");
     if (game_swap_time_min <= 10) {
       throw new RuntimeException("game.swap.time.min must be greater than 10");
@@ -80,9 +90,14 @@ public final class Config {
     cfg.addDefault("game.player.health", 40);
     cfg.addDefault("game.area.radius", 200);
     cfg.addDefault("game.area.shrinkCountDown", 60 * 5);
+    cfg.addDefault("game.area.shrinkInterval", 20);
     cfg.addDefault("game.area.time", 11000L);
+    cfg.addDefault("game.area.borderDamage", 4.0);
+    cfg.addDefault("game.swapTopTime", 40);
     cfg.addDefault("game.protectTime", 60);
-    cfg.addDefault("game.random.drop", false);
+    cfg.addDefault("game.feature.randomDrop", false);
+    cfg.addDefault("game.feature.aoeBow", false);
+    cfg.addDefault("game.feature.comboFly", false);
     cfg.addDefault("game.swap.time.min", 30);
     cfg.addDefault("game.swap.time.max", 180);
     cfg.addDefault("game.swap.song", "");

@@ -11,6 +11,11 @@ plugins {
   id 'java-library'
 }
 
+java {
+  sourceCompatibility 17
+  targetCompatibility 17
+}
+
 repositories {
   // Use Maven Central for resolving dependencies.
   mavenCentral()
@@ -40,7 +45,7 @@ dependencies {
   implementation 'com.google.guava:guava:31.1-jre'
 
   compileOnly("io.papermc.paper:paper-api:1.19.3-R0.1-SNAPSHOT")
-  compileOnly('com.github.koca2000:NoteBlockAPI:-SNAPSHOT')
+  compileOnly('com.github.koca2000:NoteBlockAPI:1.6.2')
   compileOnly('com.onarandombox.multiversecore:Multiverse-Core:4.3.2-SNAPSHOT')
 }
 

@@ -75,6 +75,7 @@ public final class WaitListener extends GameListener {
 
   // 开始游戏
   public void StartGame() {
+    countdown.cancel();
     countdownBar.removeAll();
     System.out.println("[SwapGame] Game will start soon");
     HandlerList.unregisterAll(this);
@@ -173,7 +174,6 @@ public final class WaitListener extends GameListener {
             SoundCategory.MASTER, 1, 1));
       }
       if (seconds <= 0) {
-        cancel();
         StartGame();
       }
     }

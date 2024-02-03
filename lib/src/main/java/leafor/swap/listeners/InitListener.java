@@ -1,6 +1,7 @@
 package leafor.swap.listeners;
 
 import leafor.swap.Main;
+import leafor.swap.commands.CommandForceStart;
 import leafor.swap.config.Config;
 import leafor.swap.utils.BungeeHelper;
 import net.kyori.adventure.text.Component;
@@ -21,6 +22,7 @@ import java.util.Objects;
 public final class InitListener extends GameListener {
   public InitListener() {
     Bukkit.getPluginManager().registerEvents(this, Main.GetInstance());
+    Main.GetInstance().getCommand("force_start").setExecutor(new CommandForceStart());
     var w = GenerateGameWorld();
     Bukkit.resetRecipes();
     AddCustomRecipes();
@@ -111,7 +113,9 @@ public final class InitListener extends GameListener {
     if (Config.bungee_enabled) {
       BungeeHelper.BringToLobby(Objects.requireNonNull(p));
     } else {
-      p.kick(Component.text("Server is initializing"));
+      Bukkit.getScheduler().runTask(Main.GetInstance(), () -> {
+        p.kick(Component.text("Server is initializing"));
+      });
     }
   }
 }

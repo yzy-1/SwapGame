@@ -21,6 +21,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -43,6 +45,7 @@ public final class RunListener extends GameListener {
   private final ShrinkCountDown shrinkCountdown = new ShrinkCountDown();
   private final HashMap<Material, Material> randomMap;
   private boolean isGameEnd = false;
+  private boolean isFinalPvpPeriod = false;
   private boolean isProtectionPeriod = true;
   private boolean isBeginShrink = true;
   private BossBar swapCountDownBar;
@@ -65,7 +68,7 @@ public final class RunListener extends GameListener {
     final var MAX_HEALTH = Config.game_player_health;
     // 初始化每个玩家
     players.forEach(p -> {
-      p.teleport(RandomSpawn.Get(gameWorld));
+      p.teleport(RandomSpawn.Get(gameWorld, Config.game_area_radius));
       p.setGameMode(GameMode.SURVIVAL);
       p.setFireTicks(0);
       p.setFoodLevel(20);
@@ -82,6 +85,8 @@ public final class RunListener extends GameListener {
           new PotionEffect(PotionEffectType.FAST_DIGGING, Integer.MAX_VALUE, 1, false, false));
       p.addPotionEffect(
           new PotionEffect(PotionEffectType.NIGHT_VISION, Integer.MAX_VALUE, 1, false, false));
+      p.addPotionEffect(
+          new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 0, false, false));
       var inv = p.getInventory();
       inv.clear();
       inv.setChestplate(new ItemStack(Material.IRON_CHESTPLATE));
@@ -110,7 +115,7 @@ public final class RunListener extends GameListener {
       this.shrinkCountDownBar.addPlayer(p);
     });
     swapCountdown.runTaskTimer(Main.GetInstance(), 0, 20);
-    shrinkCountdown.runTaskTimer(Main.GetInstance(), 0, 20);
+    shrinkCountdown.runTaskTimer(Main.GetInstance(), 0, Config.game_area_shrinkInterval);
   }
 
   private HashMap<Material, Material> GetRandomMap() {
@@ -184,6 +189,11 @@ public final class RunListener extends GameListener {
               winner.displayName().append(Component.text(" is the winner")), Times
                   .times(Duration.ofMillis(500), Duration.ofMillis(2000), Duration.ofMillis(500))));
         }
+      });
+      spectators.forEach(p -> {
+        p.showTitle(Title.title(Component.text("Game over!", TextColor.color(255, 0, 0)),
+            winner.displayName().append(Component.text(" is the winner")),
+            Times.times(Duration.ofMillis(500), Duration.ofMillis(2000), Duration.ofMillis(500))));
       });
       EndGame();
     }
@@ -259,7 +269,9 @@ public final class RunListener extends GameListener {
     if (Config.bungee_enabled) {
       BungeeHelper.BringToLobby(p);
     } else {
-      p.kick(Component.text("Game is already running"));
+      Bukkit.getScheduler().runTask(Main.GetInstance(), () -> {
+        p.kick(Component.text("Game is already running"));
+      });
     }
   }
 
@@ -271,13 +283,26 @@ public final class RunListener extends GameListener {
     if (!players.contains(p))
       return;
     var b = e.getBlock();
-    if (Config.game_random_drop && randomMap.containsKey(b.getType())) {
+    if (Config.game_feature_randomDrop && randomMap.containsKey(b.getType())) {
       b.setType(randomMap.get(b.getType()));
     }
     if (AutoSmelt.TrySmelt(p, Objects.requireNonNull(b))) {
       return;
     } else
       b.breakNaturally();
+  }
+
+  @EventHandler
+  public void OnBlockPlace(BlockPlaceEvent e) {
+    var p = e.getPlayer();
+    if (p == null)
+      return;
+    if (!players.contains(p))
+      return;
+    if (!isFinalPvpPeriod)
+      return;
+    p.sendMessage("Cannot place block during final pvp period.");
+    e.setCancelled(true);
   }
 
   @EventHandler
@@ -291,14 +316,30 @@ public final class RunListener extends GameListener {
 
   @EventHandler
   public void OnEntityDamage(EntityDamageEvent e) {
-    if (!(e.getEntity() instanceof Player))
+    if (!(e.getEntity() instanceof Player)) {
       return;
+    }
     // 游戏结束后玩家无法受到伤害
     if (isGameEnd) {
       e.setDamage(0);
       e.setCancelled(true);
       return;
     }
+  }
+
+  @EventHandler
+  public void OnPlayerDamage(EntityDamageByEntityEvent e) {
+    if (!Config.game_feature_comboFly) {
+      return;
+    }
+    if (!(e.getDamager() instanceof Player)) {
+      return;
+    }
+    var player = (Player) e.getEntity();
+    Bukkit.getScheduler().runTask(Main.GetInstance(), () -> {
+      player.setNoDamageTicks(2);
+      player.setLastDamage(0);
+    });
   }
 
   // 交换倒计时
@@ -391,10 +432,27 @@ public final class RunListener extends GameListener {
           shrinkCountDownBar.setProgress((double) seconds / maxSeconds);
         }
         if (!isBeginShrink) {
+          if (seconds < 5)
+            seconds = 5;
           WorldBorder wb = gameWorld.getCBWorld().getWorldBorder();
           wb.setCenter(gameWorld.getSpawnLocation());
           wb.setSize(seconds * 2 + 1); // 边界边长 = 半径 * 2 + 1
-          wb.setDamageAmount(Double.MAX_VALUE); // 使玩家离开边界时死亡
+          wb.setDamageAmount(0);
+          if (seconds == Config.game_swapTopTime) {
+            players.forEach(p -> {
+              var pos = p.getLocation();
+              pos.setY(gameWorld.getCBWorld().getHighestBlockAt(pos).getLocation().getY() + 1);
+              p.teleport(pos);
+            });
+            isFinalPvpPeriod = true;
+          } else {
+            players.forEach(p -> {
+              if (!wb.isInside(p.getLocation())) {
+                p.damage(Config.game_area_borderDamage);
+                p.teleport(RandomSpawn.Get(gameWorld, seconds));
+              }
+            });
+          }
         }
         var wLoc = gameWorld.getSpawnLocation();
         var r = isBeginShrink ? Config.game_area_radius : seconds;

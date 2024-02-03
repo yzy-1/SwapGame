@@ -7,9 +7,11 @@ depend:
   - NoteBlockAPI
   - "Multiverse-Core"
 permissions:
-  leafor.swap.reload:
-    description: Reload config
+  leafor.swap.forceStart:
+    description: Force start game
     default: op
-  leafor.swap.watch:
-    description: Watch the game
-    default: true
+commands:
+  force_start:
+    description: Force start Game
+    usage: /<command>
+    permission: leafor.swap.forceStart

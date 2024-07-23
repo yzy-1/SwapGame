@@ -65,6 +65,19 @@ public final class InitListener extends GameListener {
     Bukkit.addRecipe(
         new ShapedRecipe(new NamespacedKey(m, "sg_water"), new ItemStack(Material.WATER_BUCKET))
             .shape("I I", " I ").setIngredient('I', Material.IRON_INGOT));
+    // 弓 1
+    Bukkit.addRecipe(new ShapedRecipe(new NamespacedKey(m, "sg_bow1"), new ItemStack(Material.BOW))
+        .shape("SI ", "S I", "SI ").setIngredient('I', Material.IRON_INGOT)
+        .setIngredient('S', Material.STICK));
+    // 弓 2
+    Bukkit.addRecipe(new ShapedRecipe(new NamespacedKey(m, "sg_bow2"), new ItemStack(Material.BOW))
+        .shape(" IS", "I S", " IS").setIngredient('I', Material.IRON_INGOT)
+        .setIngredient('S', Material.STICK));
+    // 箭
+    Bukkit.addRecipe(
+        new ShapedRecipe(new NamespacedKey(m, "sg_arrow"), new ItemStack(Material.ARROW, 4))
+            .shape("I", "S").setIngredient('I', Material.IRON_INGOT)
+            .setIngredient('S', Material.STICK));
   }
 
   // 生成游戏世界
